@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    await setAdminCookie()
+    await setAdminCookie(username)
 
     return NextResponse.json({ success: true })
   } catch (error) {

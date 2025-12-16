@@ -2,6 +2,7 @@ import { cookies } from 'next/headers'
 import { prisma } from './db'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 
 const SESSION_COOKIE_NAME = 'deso-oidc-session'
 const ADMIN_COOKIE_NAME = 'deso-oidc-admin'
@@ -115,17 +116,36 @@ export async function isAdmin(): Promise<boolean> {
     return false
   }
 
-  // In production, verify the admin token properly
-  // For now, just check if it exists
-  return true
+  try {
+    // Verify the JWT token
+    const secret = process.env.SESSION_SECRET || 'change-this-secret-key'
+    const decoded = jwt.verify(adminToken, secret) as { username: string, exp: number }
+    
+    // Verify the user still exists in database
+    const admin = await prisma.adminUser.findUnique({
+      where: { username: decoded.username },
+    })
+    
+    return !!admin
+  } catch (error) {
+    // Token is invalid or expired
+    return false
+  }
 }
 
 /**
  * Set admin cookie
  */
-export async function setAdminCookie(): Promise<void> {
+export async function setAdminCookie(username: string): Promise<void> {
   const cookieStore = await cookies()
-  const adminToken = nanoid(32)
+  const secret = process.env.SESSION_SECRET || 'change-this-secret-key'
+  
+  // Create a JWT token with 8 hour expiration
+  const adminToken = jwt.sign(
+    { username, admin: true },
+    secret,
+    { expiresIn: '8h' }
+  )
   
   cookieStore.set(ADMIN_COOKIE_NAME, adminToken, {
     httpOnly: true,
