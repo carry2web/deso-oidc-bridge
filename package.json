@@ -6,16 +6,26 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "build": "node build-deso.js"
   },
-  "keywords": ["oidc", "deso", "microsoft", "express"],
+  "keywords": [
+    "oidc",
+    "deso",
+    "microsoft",
+    "express"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "deso-protocol": "^3.4.1",
     "express": "^4.18.2",
-    "jose": "^5.2.0",
-    "nanoid": "^5.0.4",
     "express-session": "^1.17.3",
-    "cookie-parser": "^1.4.6"
+    "jose": "^5.2.0",
+    "nanoid": "^5.0.4"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.2"
   }
 }
