@@ -114,9 +114,8 @@
     <div id="status"></div>
   </div>
 
-  <script src="https://unpkg.com/deso-protocol@latest/dist/browser.js"></script>
-  <script>
-    const { identity } = deso;
+<script type="module">
+    import { identity } from '/deso-protocol.js';
     
     const form = document.getElementById('registerForm');
     const statusDiv = document.getElementById('status');
