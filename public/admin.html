@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - DeSo OIDC Bridge</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container {
+      background: white;
+      padding: 3rem;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 28px; margin-bottom: 0.5rem; color: #333; }
+    .approval {
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .approval strong { display: block; margin-bottom: 0.5rem; }
+    .approval span { display: block; color: #666; font-size: 14px; margin-bottom: 0.25rem; }
+    .actions {
+      margin-top: 1rem;
+      display: flex;
+      gap: 1rem;
+    }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-approve { background: #28a745; color: white; }
+    .btn-approve:hover { background: #218838; }
+    .btn-reject { background: #dc3545; color: white; }
+    .btn-reject:hover { background: #c82333; }
+    .empty { text-align: center; padding: 3rem; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Admin Dashboard</h1>
+    <p id="subtitle">Loading...</p>
+    
+    <div id="approvals"></div>
+  </div>
+
+  <script src="https://unpkg.com/deso-protocol@latest/dist/browser.js"></script>
+  <script>
+    const { identity } = deso;
+    
+    let adminPublicKey = null;
+    
+    identity.subscribe(async ({ currentUser }) => {
+      if (currentUser?.publicKey) {
+        adminPublicKey = currentUser.publicKey;
+        await checkAdminAndLoad();
+      } else {
+        window.location.href = '/login.html';
+      }
+    });
+
+    async function checkAdminAndLoad() {
+      const response = await fetch(`/admin/check?publicKey=${adminPublicKey}`);
+      const data = await response.json();
+      
+      if (!data.isAdmin) {
+        document.getElementById('subtitle').textContent = 'Unauthorized - Admin access required';
+        return;
+      }
+      
+      await loadApprovals();
+    }
+
+    async function loadApprovals() {
+      const response = await fetch(`/admin/approvals?publicKey=${adminPublicKey}`);
+      const data = await response.json();
+      
+      const approvalsDiv = document.getElementById('approvals');
+      const subtitle = document.getElementById('subtitle');
+      
+      if (!data.success || data.approvals.length === 0) {
+        subtitle.textContent = 'No pending registrations';
+        approvalsDiv.innerHTML = '<div class="empty">All caught up! 🎉</div>';
+        return;
+      }
+      
+      subtitle.textContent = `Pending registrations: ${data.approvals.length}`;
+      
+      approvalsDiv.innerHTML = data.approvals.map(approval => `
+        <div class="approval">
+          <strong>${approval.username || 'Unknown'}</strong>
+          <span>Email: ${approval.email}</span>
+          <span>Public Key: ${approval.publicKey.substring(0, 30)}...</span>
+          <span>Submitted: ${new Date(approval.createdAt).toLocaleString()}</span>
+          <div class="actions">
+            <button class="btn btn-approve" onclick="handleApprove('${approval.id}')">Approve</button>
+            <button class="btn btn-reject" onclick="handleReject('${approval.id}')">Reject</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function handleApprove(approvalId) {
+      await handleAction(approvalId, 'approve');
+    }
+
+    async function handleReject(approvalId) {
+      await handleAction(approvalId, 'reject');
+    }
+
+    async function handleAction(approvalId, action) {
+      try {
+        const response = await fetch('/admin/approvals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ approvalId, action, adminPublicKey }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          await loadApprovals();
+        } else {
+          alert('Action failed: ' + (data.error || 'Unknown error'));
+        }
+      } catch (error) {
+        alert('Action failed: ' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>

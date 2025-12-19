@@ -1,0 +1,41 @@
+name: Deploy to Azure Web App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
+  REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+  REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ secrets.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
+
+      - name: Build and push Docker image
+        run: |
+          docker build . \
+            -t ${{ secrets.REGISTRY_URL }}/deso-oidc-express:${{ github.sha }} \
+            -t ${{ secrets.REGISTRY_URL }}/deso-oidc-express:latest
+          docker push ${{ secrets.REGISTRY_URL }}/deso-oidc-express:${{ github.sha }}
+          docker push ${{ secrets.REGISTRY_URL }}/deso-oidc-express:latest
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'deso-oidc-express'
+          images: ${{ secrets.REGISTRY_URL }}/deso-oidc-express:${{ github.sha }}

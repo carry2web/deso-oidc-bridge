@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - DeSo OIDC Bridge</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: white;
+      padding: 3rem;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 400px;
+      width: 90%;
+    }
+    h1 { font-size: 28px; margin-bottom: 0.5rem; color: #333; }
+    p { color: #666; margin-bottom: 2rem; }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #5568d3; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; }
+    .status {
+      margin-top: 1rem;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 14px;
+    }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .info { background: #d1ecf1; color: #0c5460; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>DeSo OIDC Bridge</h1>
+    <p>Login with your DeSo Identity to access Microsoft 365</p>
+    <button id="loginBtn" class="btn">Connect DeSo Identity</button>
+    <div id="status"></div>
+  </div>
+
+  <script src="https://unpkg.com/deso-protocol@latest/dist/browser.js"></script>
+  <script>
+    const { identity, configure } = deso;
+    
+    configure({
+      appName: 'DeSo OIDC Bridge',
+    });
+
+    const loginBtn = document.getElementById('loginBtn');
+    const statusDiv = document.getElementById('status');
+
+    function showStatus(message, type = 'info') {
+      statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+    }
+
+    // Check if already logged in
+    identity.subscribe(async ({ currentUser, event }) => {
+      if (currentUser?.publicKey && event === 'LOGIN_END') {
+        loginBtn.disabled = true;
+        showStatus('Processing login...', 'info');
+        
+        try {
+          const response = await fetch('/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              publicKey: currentUser.publicKey,
+              username: currentUser.ProfileEntryResponse?.Username || null,
+            }),
+          });
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            if (data.redirect) {
+              window.location.href = data.redirect;
+            } else {
+              showStatus('Login successful!', 'success');
+              setTimeout(() => window.location.href = '/register.html', 1000);
+            }
+          } else {
+            showStatus('Login failed: ' + (data.error || 'Unknown error'), 'error');
+            loginBtn.disabled = false;
+          }
+        } catch (error) {
+          showStatus('Login failed: ' + error.message, 'error');
+          loginBtn.disabled = false;
+        }
+      }
+    });
+
+    loginBtn.addEventListener('click', async () => {
+      try {
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Opening DeSo Identity...';
+        await identity.login();
+      } catch (error) {
+        showStatus('Login cancelled or failed', 'error');
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Connect DeSo Identity';
+      }
+    });
+  </script>
+</body>
+</html>
