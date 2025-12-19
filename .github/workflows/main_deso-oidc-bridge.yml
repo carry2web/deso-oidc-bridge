@@ -10,22 +10,44 @@ env:
   REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
   REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
   REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+  AZURE_WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Login to ACR
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Azure Container Registry
         run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ secrets.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
 
       - name: Build and push Docker image
         run: |
-          docker build . \
+          docker buildx build --platform linux/amd64 \
+            --cache-from type=registry,ref=${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest \
+            --cache-to type=inline \
             -t ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:${{ github.sha }} \
-            -t ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest
-          docker push ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:${{ github.sha }}
-          docker push ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest
-          echo "Deployed to ACR. Azure Web App will auto-pull the latest image."
+            -t ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest \
+            --push .
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Restart Azure Web App
+        run: |
+          az webapp restart --name ${{ secrets.AZURE_WEBAPP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
+
+      - name: Deployment Summary
+        run: |
+          echo "✅ Deployment completed successfully!"
+          echo "🚀 Image: ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:${{ github.sha }}"
+          echo "📦 Also tagged as: latest"
+          echo "🌐 Web App: ${{ secrets.AZURE_WEBAPP_NAME }}"

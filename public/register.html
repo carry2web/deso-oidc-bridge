@@ -88,8 +88,8 @@
   </div>
 
   <div class="container">
-    <h1>Register for M365 Access</h1>
-    <p>Submit your information for admin approval</p>
+    <h1>Register for SafetyNet.Social</h1>
+    <p>Request membership access to SafetyNet.Social community</p>
     
     <form id="registerForm">
       <div class="form-group">
@@ -103,11 +103,16 @@
       </div>
       
       <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="email" required placeholder="your.email@example.com">
+        <label>Email (will be username@safetynet.social)</label>
+        <input type="email" id="email" required readonly>
       </div>
       
-      <button type="submit" class="btn">Submit Registration</button>
+      <div class="form-group">
+        <label>Why do you want to join SafetyNet.Social? *</label>
+        <textarea id="justification" required placeholder="Please explain why you want to become a member of SafetyNet.Social and how you plan to contribute to the community..." style="min-height: 120px; resize: vertical; font-family: inherit;"></textarea>
+      </div>
+      
+      <button type="submit" class="btn">Submit Membership Request</button>
       <button type="button" id="logoutBtn" class="btn btn-secondary" style="margin-top: 1rem;">Logout</button>
     </form>
     
@@ -146,6 +151,12 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
+      const justification = document.getElementById('justification').value.trim();
+      if (justification.length < 50) {
+        showStatus('✗ Please provide a more detailed justification (at least 50 characters)', 'error');
+        return;
+      }
+      
       const submitBtn = form.querySelector('button[type="submit"]');
       submitBtn.disabled = true;
       submitBtn.textContent = 'Submitting...';
@@ -158,6 +169,7 @@
             publicKey: document.getElementById('publicKey').value,
             username: document.getElementById('username').value,
             email: document.getElementById('email').value,
+            justification: justification,
           }),
         });
         

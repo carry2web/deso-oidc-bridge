@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - SafetyNet.Social</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .header {
+      background: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .header-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .user-email {
+      color: #666;
+      font-size: 14px;
+    }
+    .btn-logout {
+      padding: 8px 16px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-logout:hover { background: #c82333; }
+    .container {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+    .welcome-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      margin-bottom: 2rem;
+    }
+    .welcome-card h1 {
+      font-size: 28px;
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+    .welcome-card p {
+      color: #666;
+      font-size: 16px;
+    }
+    .apps-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .apps-section h2 {
+      font-size: 22px;
+      color: #333;
+      margin-bottom: 1rem;
+    }
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .app-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      text-decoration: none;
+      color: #333;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .app-card:hover {
+      border-color: #667eea;
+      transform: translateY(-4px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
+    }
+    .app-icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 0.75rem;
+    }
+    .app-name {
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      color: #333;
+    }
+    .embed-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      margin-top: 2rem;
+      min-height: 600px;
+    }
+    .embed-section h2 {
+      font-size: 22px;
+      color: #333;
+      margin-bottom: 1rem;
+    }
+    .embed-frame {
+      width: 100%;
+      height: 500px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: white;
+    }
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <div class="header-title">🛡️ SafetyNet.Social</div>
+    </div>
+    <div class="user-info">
+      <span class="user-email" id="userEmail">Loading...</span>
+      <button class="btn-logout" id="logoutBtn">Logout</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="welcome-card">
+      <h1>Welcome to SafetyNet.Social! 👋</h1>
+      <p id="welcomeMessage">You have access to Microsoft 365 services through your SafetyNet.Social account.</p>
+    </div>
+
+    <div class="apps-section">
+      <h2>Your Microsoft 365 Apps</h2>
+      <p style="color: #666; margin-bottom: 1rem;">Click any app below to open it with your @safetynet.social account</p>
+      
+      <div class="apps-grid">
+        <a href="https://outlook.office.com" target="_blank" class="app-card">
+          <img src="https://res.cdn.office.net/assets/mail/suites/resources/images/app-icons/outlook.svg" alt="Outlook" class="app-icon">
+          <div class="app-name">Outlook</div>
+        </a>
+
+        <a href="https://teams.microsoft.com" target="_blank" class="app-card">
+          <img src="https://res.cdn.office.net/teams-modular-packages/assets/images/apps/teams.svg" alt="Teams" class="app-icon">
+          <div class="app-name">Teams</div>
+        </a>
+
+        <a href="https://www.office.com/launch/word" target="_blank" class="app-card">
+          <img src="https://res.cdn.office.net/assets/mail/suites/resources/images/app-icons/word.svg" alt="Word" class="app-icon">
+          <div class="app-name">Word</div>
+        </a>
+
+        <a href="https://www.office.com/launch/excel" target="_blank" class="app-card">
+          <img src="https://res.cdn.office.net/assets/mail/suites/resources/images/app-icons/excel.svg" alt="Excel" class="app-icon">
+          <div class="app-name">Excel</div>
+        </a>
+
+        <a href="https://www.office.com/launch/powerpoint" target="_blank" class="app-card">
+          <img src="https://res.cdn.office.net/assets/mail/suites/resources/images/app-icons/powerpoint.svg" alt="PowerPoint" class="app-icon">
+          <div class="app-name">PowerPoint</div>
+        </a>
+
+        <a href="https://www.office.com/launch/onenote" target="_blank" class="app-card">
+          <img src="https://res.cdn.office.net/assets/mail/suites/resources/images/app-icons/onenote.svg" alt="OneNote" class="app-icon">
+          <div class="app-name">OneNote</div>
+        </a>
+
+        <a href="https://onedrive.live.com" target="_blank" class="app-card">
+          <img src="https://res.cdn.office.net/assets/mail/suites/resources/images/app-icons/onedrive.svg" alt="OneDrive" class="app-icon">
+          <div class="app-name">OneDrive</div>
+        </a>
+
+        <a href="https://www.microsoft365.com" target="_blank" class="app-card">
+          <img src="https://res.cdn.office.net/assets/mail/suites/resources/images/app-icons/office.svg" alt="All Apps" class="app-icon">
+          <div class="app-name">All Apps</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="embed-section">
+      <h2>Microsoft 365 App Launcher</h2>
+      <p style="color: #666; margin-bottom: 1rem;">Full view of all your available apps</p>
+      <iframe src="https://www.microsoft365.com/" class="embed-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
+    </div>
+  </div>
+
+<script type="module">
+    import { identity } from '/deso-protocol.js';
+    
+    let currentUser = null;
+
+    // Check session on load
+    async function checkSession() {
+      try {
+        const response = await fetch('/auth/session');
+        const data = await response.json();
+        
+        if (!data.loggedIn || !data.email) {
+          window.location.href = '/login.html';
+          return;
+        }
+        
+        // Update UI with user info
+        document.getElementById('userEmail').textContent = data.email;
+        document.getElementById('welcomeMessage').textContent = 
+          `You're logged in as ${data.email}. Access your Microsoft 365 apps below.`;
+      } catch (error) {
+        console.error('Session check failed:', error);
+        window.location.href = '/login.html';
+      }
+    }
+
+    // Subscribe to DeSo identity changes
+    identity.subscribe(({ currentUser: user, event }) => {
+      if (user?.publicKey) {
+        currentUser = user;
+      } else if (event === 'LOGOUT') {
+        handleLogout();
+      }
+    });
+
+    // Logout handler
+    async function handleLogout() {
+      try {
+        await fetch('/auth/logout', { method: 'POST' });
+        await identity.logout();
+        window.location.href = '/login.html';
+      } catch (error) {
+        console.error('Logout failed:', error);
+        window.location.href = '/login.html';
+      }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+    // Initialize
+    checkSession();
+  </script>
+</body>
+</html>

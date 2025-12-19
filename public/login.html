@@ -95,7 +95,7 @@
               window.location.href = data.redirect;
             } else {
               showStatus('Login successful!', 'success');
-              setTimeout(() => window.location.href = '/register.html', 1000);
+              setTimeout(() => window.location.href = '/dashboard.html', 1000);
             }
           } else {
             showStatus('Login failed: ' + (data.error || 'Unknown error'), 'error');

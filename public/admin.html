@@ -105,6 +105,10 @@
           <span>Email: ${approval.email}</span>
           <span>Public Key: ${approval.publicKey.substring(0, 30)}...</span>
           <span>Submitted: ${new Date(approval.createdAt).toLocaleString()}</span>
+          <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 6px;">
+            <strong style="font-size: 14px; color: #333;">Justification:</strong>
+            <p style="margin-top: 0.5rem; color: #555; font-size: 14px; line-height: 1.5;">${approval.justification || 'No justification provided'}</p>
+          </div>
           <div class="actions">
             <button class="btn btn-approve" onclick="handleApprove('${approval.id}')">Approve</button>
             <button class="btn btn-reject" onclick="handleReject('${approval.id}')">Reject</button>

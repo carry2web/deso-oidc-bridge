@@ -62,10 +62,25 @@ router.post('/approvals', (req, res) => {
  * Submit registration request
  */
 router.post('/register', (req, res) => {
-  const { publicKey, username, email } = req.body;
+  const { publicKey, username, email, justification } = req.body;
   
   if (!publicKey) {
     return res.status(400).json({ error: 'Missing publicKey' });
+  }
+  
+  if (!justification || justification.length < 50) {
+    return res.status(400).json({ error: 'Justification must be at least 50 characters' });
+  }
+  
+  // Check if already registered
+  const existing = Array.from(pendingApprovals.values())
+    .find(a => a.publicKey === publicKey && a.status === 'pending');
+  
+  if (existing) {
+    return res.status(400).json({ 
+      error: 'You already have a pending registration request',
+      approvalId: existing.id
+    });
   }
   
   const approvalId = nanoid();
@@ -74,6 +89,7 @@ router.post('/register', (req, res) => {
     publicKey,
     username,
     email,
+    justification,
     status: 'pending',
     createdAt: Date.now(),
   });
@@ -81,7 +97,7 @@ router.post('/register', (req, res) => {
   res.json({ 
     success: true, 
     approvalId,
-    message: 'Registration submitted for admin approval'
+    message: 'Membership request submitted! An admin will review your application.'
   });
 });
 

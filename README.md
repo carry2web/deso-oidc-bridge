@@ -1,16 +1,26 @@
-# DeSo OIDC Bridge - Express.js
+# DeSo OIDC Bridge - SafetyNet.Social
 
-Simple Express.js OIDC provider that bridges DeSo Identity authentication to Microsoft 365.
+Express.js OIDC provider that bridges DeSo Identity authentication to Microsoft 365 for SafetyNet.Social community members.
+
+## Authentication Flow
+
+1. **User logs in with DeSo Identity** → System checks if `desohandle@safetynet.social` exists in Entra ID
+2. **If user exists** → Dashboard showing M365 apps + Automatic OIDC login capability ✅
+3. **If user doesn't exist** → Registration form with justification → Admin approval → User provisioned in Entra ID
 
 ## Features
 
 - ✅ OIDC 1.0 compliant endpoints
 - ✅ DeSo Identity integration (login with public key)
+- ✅ Dashboard with M365 apps for authenticated users
+- ✅ Automatic login for existing Entra ID users
+- ✅ Registration with justification requirement
 - ✅ JWT signing with RS256
 - ✅ Admin approval workflow
 - ✅ Session management
 - ✅ Simple HTML UI (no framework bloat)
 - ✅ Docker ready
+- ✅ GitHub Actions CI/CD to Azure
 
 ## Quick Start
 
@@ -46,7 +56,8 @@ Server runs on http://localhost:3000
 ## User Pages
 
 - `/login.html` - DeSo Identity login
-- `/register.html` - Submit registration for approval
+- `/dashboard.html` - Dashboard with M365 apps for authenticated users
+- `/register.html` - Membership registration with justification
 - `/admin.html` - Admin approval dashboard
 
 ## Environment Variables
@@ -120,20 +131,22 @@ az webapp create --name deso-bridge --resource-group yourgroup \
 ## Project Structure
 
 ```
-deso-oidc-express/
+deso-oidc-bridge/
 ├── server.js           # Main Express server
 ├── lib/
 │   ├── jwt.js         # JWT token creation
 │   ├── keys.js        # RSA key pair generation
-│   └── store.js       # In-memory data stores
+│   ├── store.js       # In-memory data stores
+│   └── graphClient.js # Microsoft Graph API client
 ├── routes/
 │   ├── oidc.js        # OIDC endpoints
 │   ├── auth.js        # DeSo auth callbacks
 │   └── admin.js       # Admin approval API
 ├── public/
 │   ├── login.html     # DeSo Identity login
-│   ├── register.html  # Registration form
-│   └── admin.html     # Admin dashboard
+│   ├── dashboard.html # M365 apps dashboard
+│   ├── register.html  # Registration form with justification
+│   └── admin.html     # Admin approval dashboard
 └── Dockerfile         # Docker configuration
 ```
 
