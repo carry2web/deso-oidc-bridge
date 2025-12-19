@@ -58,9 +58,8 @@
     <div id="status"></div>
   </div>
 
-  <script src="https://unpkg.com/deso-protocol@latest/dist/browser.js"></script>
-  <script>
-    const { identity, configure } = deso;
+  <script type="module">
+    import { identity, configure } from 'https://cdn.skypack.dev/deso-protocol';
     
     configure({
       appName: 'DeSo OIDC Bridge',
