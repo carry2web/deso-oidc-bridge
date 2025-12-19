@@ -28,9 +28,4 @@ jobs:
             -t ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest
           docker push ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:${{ github.sha }}
           docker push ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest
-
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'deso-oidc-bridge'
-          images: ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:${{ github.sha }}
+          echo "Deployed to ACR. Azure Web App will auto-pull the latest image."
