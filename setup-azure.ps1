@@ -3,8 +3,8 @@
 
 $resourceGroup = "bridge"
 $location = "westeurope"
-$registryName = "desooiidcexpress"
-$appName = "deso-oidc-express"
+$registryName = "desooiidcbridge"
+$appName = "deso-oidc-bridge"
 $appServicePlan = "bridge-plan"
 
 Write-Host "Setting up Azure Container Registry..." -ForegroundColor Cyan
