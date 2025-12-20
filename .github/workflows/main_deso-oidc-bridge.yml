@@ -7,10 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
-  REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
-  REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
-  AZURE_WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+
 
 jobs:
   build-and-deploy:
@@ -21,22 +18,21 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Log in to registry
-        run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ secrets.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
+          run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ secrets.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
 
       - name: Build and push
-        run: |
-          docker build -t ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest .
-          docker push ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest
+          run: |
+            docker build -t ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest .
+            docker push ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest
 
       - name: Tag image with commit SHA and push
-        run: |
-          docker tag ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:${{ github.sha }}
-          docker push ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:${{ github.sha }}
+          run: |
+            # Optional: Only use latest tag for simplicity
 
       - name: Azure CLI - Update Web App to use new image
-        uses: azure/cli@v1
-        with:
-          azcliversion: 2.30.0
-          inlineScript: |
-            az webapp config container set --name ${{ secrets.AZURE_WEBAPP_NAME }} --resource-group bridge --docker-custom-image-name ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:${{ github.sha }}
-            az webapp restart --name ${{ secrets.AZURE_WEBAPP_NAME }} --resource-group bridge
+          uses: azure/cli@v1
+          with:
+            azcliversion: 2.30.0
+            inlineScript: |
+              az webapp config container set --name deso-oidc-bridge --resource-group bridge --docker-custom-image-name ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest
+              az webapp restart --name deso-oidc-bridge --resource-group bridge
