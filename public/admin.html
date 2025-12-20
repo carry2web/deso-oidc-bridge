@@ -149,8 +149,25 @@
       }
     }
   </script>
-  <div style="text-align: center; padding: 20px; color: #666; font-size: 12px; border-top: 1px solid #eee; margin-top: 40px;">
-    Version: BUILD_TIMESTAMP
+  <div id="footer" style="text-align: center; padding: 20px; color: #666; font-size: 12px; border-top: 1px solid #eee; margin-top: 40px;">
+    <div>Version: BUILD_TIMESTAMP</div>
+    <div id="debugInfo" style="margin-top: 10px; display: none;"></div>
   </div>
+  <script>
+    fetch('/api/debug-status')
+      .then(r => r.json())
+      .then(data => {
+        if (data.debug) {
+          const debugDiv = document.getElementById('debugInfo');
+          debugDiv.style.display = 'block';
+          debugDiv.innerHTML = `
+            <strong>DEBUG MODE ACTIVE</strong><br>
+            Page: admin.html<br>
+            Timestamp: ${new Date().toISOString()}<br>
+            Requests Count: ${document.querySelectorAll('.request-item').length}
+          `;
+        }
+      });
+  </script>
 </body>
 </html>

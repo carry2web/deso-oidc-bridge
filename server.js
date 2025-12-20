@@ -32,6 +32,11 @@ app.use(session({
 // Static files
 app.use(express.static(join(__dirname, 'public')));
 
+// Debug endpoint
+app.get('/api/debug-status', (req, res) => {
+  res.json({ debug: process.env.DEBUG === 'true' });
+});
+
 // Routes
 app.use('/auth', authRoutes);
 app.use('/', oidcRoutes);
