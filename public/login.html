@@ -109,15 +109,23 @@
         loginBtn.disabled = true;
         showStatus('Processing login...', 'info');
         
-        console.log('Login - Current user:', currentUser); // Debug log
-        updateDebugInfo(currentUser);
+        // Fetch username from DeSo API
+        let username = null;
+        try {
+          const profileResponse = await fetch('https://node.deso.org/api/v0/get-single-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ PublicKeyBase58Check: currentUser.publicKey })
+          });
+          const profileData = await profileResponse.json();
+          username = profileData?.Profile?.Username || null;
+        } catch (err) {
+          showStatus('Failed to fetch DeSo profile', 'error');
+          loginBtn.disabled = false;
+          return;
+        }
         
-        // Try different ways to get username
-        const username = currentUser.ProfileEntryResponse?.Username || 
-                        currentUser.profile?.Username ||
-                        currentUser.username ||
-                        null;
-        
+        // POST to backend
         try {
           const response = await fetch('/auth/login', {
             method: 'POST',
@@ -127,9 +135,7 @@
               username: username,
             }),
           });
-          
           const data = await response.json();
-          
           if (data.success) {
             if (data.redirect) {
               window.location.href = data.redirect;
@@ -176,5 +182,4 @@
       });
   </script>
 </body>
-</html>
 </html>
