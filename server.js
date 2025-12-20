@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
@@ -51,6 +52,11 @@ app.get('/', (req, res) => {
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(500).json({ error: 'Internal server error' });
+});
+
+// Health check endpoint for Azure
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
 });
 
 app.listen(PORT, () => {
