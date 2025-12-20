@@ -64,11 +64,16 @@ router.post('/approvals', (req, res) => {
 router.post('/register', (req, res) => {
   const { publicKey, username, email, justification } = req.body;
   
+  console.log('=== REGISTRATION REQUEST ===');
+  console.log('Request body:', JSON.stringify(req.body, null, 2));
+  
   if (!publicKey) {
+    console.error('ERROR: Missing publicKey');
     return res.status(400).json({ error: 'Missing publicKey' });
   }
   
   if (!justification || justification.length < 50) {
+    console.error('ERROR: Justification too short or missing:', justification?.length || 0, 'chars');
     return res.status(400).json({ error: 'Justification must be at least 50 characters' });
   }
   
@@ -77,6 +82,7 @@ router.post('/register', (req, res) => {
     .find(a => a.publicKey === publicKey && a.status === 'pending');
   
   if (existing) {
+    console.log('⚠ User already has pending request:', existing.id);
     return res.status(400).json({ 
       error: 'You already have a pending registration request',
       approvalId: existing.id
@@ -84,7 +90,7 @@ router.post('/register', (req, res) => {
   }
   
   const approvalId = nanoid();
-  pendingApprovals.set(approvalId, {
+  const approval = {
     id: approvalId,
     publicKey,
     username,
@@ -92,7 +98,12 @@ router.post('/register', (req, res) => {
     justification,
     status: 'pending',
     createdAt: Date.now(),
-  });
+  };
+  
+  pendingApprovals.set(approvalId, approval);
+  console.log('✓ Registration created:', approvalId);
+  console.log('Approval details:', approval);
+  console.log('=== END REGISTRATION REQUEST ===\n');
   
   res.json({ 
     success: true, 

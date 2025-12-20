@@ -9,7 +9,13 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
   const { publicKey, username } = req.body;
 
+  console.log('=== LOGIN REQUEST ===');
+  console.log('Request body:', JSON.stringify(req.body, null, 2));
+  console.log('Public Key:', publicKey);
+  console.log('Username:', username);
+
   if (!publicKey) {
+    console.error('ERROR: Missing publicKey');
     return res.status(400).json({ error: 'Missing publicKey' });
   }
 
@@ -17,24 +23,32 @@ router.post('/login', async (req, res) => {
   req.session.publicKey = publicKey;
   req.session.username = username || null;
   req.session.email = username ? `${username}@safetynet.social` : null;
+  
+  console.log('Session data set:', { publicKey, username, email: req.session.email });
 
   // Check if user exists in Entra ID
   let userExists = false;
   if (username) {
     try {
+      console.log(`Checking Entra ID for: ${username}@safetynet.social`);
       userExists = await checkUserExists(`${username}@safetynet.social`);
-      console.log(`User ${username}@safetynet.social exists in Entra ID:`, userExists);
+      console.log(`✓ User ${username}@safetynet.social exists in Entra ID:`, userExists);
     } catch (error) {
-      console.error('Error checking Entra ID:', error);
+      console.error('ERROR checking Entra ID:', error.message);
+      console.error('Stack:', error.stack);
       return res.status(500).json({ error: 'Failed to verify user' });
     }
+  } else {
+    console.log('⚠ No username provided - cannot check Entra ID');
   }
 
   // If there's a pending auth request, redirect to complete it (only if user exists)
   if (req.session.authRequest) {
+    console.log('Pending auth request found:', req.session.authRequest);
     const { client_id, redirect_uri, state } = req.session.authRequest;
     
     if (userExists) {
+      console.log('✓ User exists - proceeding with OIDC flow');
       delete req.session.authRequest;
       // Redirect back to /authorize to complete the flow
       return res.json({
@@ -43,6 +57,7 @@ router.post('/login', async (req, res) => {
       });
     } else {
       // User doesn't exist - need registration with justification
+      console.log('✗ User does not exist - redirecting to registration');
       return res.json({ 
         success: true, 
         redirect: '/register.html',
@@ -52,19 +67,23 @@ router.post('/login', async (req, res) => {
   }
 
   // No pending auth request - direct login, show dashboard for existing users
+  console.log('No pending auth request - direct login flow');
   if (userExists) {
+    console.log('✓ Redirecting to dashboard');
     res.json({ 
       success: true, 
       redirect: '/dashboard.html',
       message: 'Login successful! You have access to SafetyNet.Social.' 
     });
   } else {
+    console.log('✗ Redirecting to registration');
     res.json({ 
       success: true, 
       redirect: '/register.html',
       message: 'Welcome! Please complete membership registration to access SafetyNet.Social.' 
     });
   }
+  console.log('=== END LOGIN REQUEST ===\n');
 });
 
 /**

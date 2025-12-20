@@ -55,6 +55,13 @@
     <h1>DeSo OIDC Bridge</h1>
     <p>Login with your DeSo Identity to access Microsoft 365</p>
     <button id="loginBtn" class="btn">Connect DeSo Identity</button>
+    
+    <!-- Debug Info -->
+    <div id="debugSection" style="display: none; margin-top: 1rem; background: #f0f0f0; padding: 1rem; border-radius: 8px; font-size: 12px; font-family: monospace; text-align: left;">
+      <strong>Debug Info:</strong>
+      <div id="debugInfo" style="margin-top: 0.5rem; color: #333;"></div>
+    </div>
+    
     <div id="status"></div>
   </div>
 
@@ -67,9 +74,27 @@
 
     const loginBtn = document.getElementById('loginBtn');
     const statusDiv = document.getElementById('status');
+    const debugSection = document.getElementById('debugSection');
+    const debugInfo = document.getElementById('debugInfo');
 
     function showStatus(message, type = 'info') {
       statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+    }
+    
+    function updateDebugInfo(user) {
+      debugSection.style.display = 'block';
+      const username = user.ProfileEntryResponse?.Username || 
+                      user.profile?.Username ||
+                      user.username ||
+                      null;
+      const debugLines = [
+        `✓ DeSo Identity connected`,
+        `Public Key: ${user.publicKey.slice(0, 20)}...`,
+        `Username detected: ${username || '✗ Not found'}`,
+        `ProfileEntryResponse: ${user.ProfileEntryResponse ? '✓ Present' : '✗ Missing'}`,
+        `Sending to server...`
+      ];
+      debugInfo.innerHTML = debugLines.join('<br>');
     }
 
     // Check if already logged in
@@ -79,6 +104,7 @@
         showStatus('Processing login...', 'info');
         
         console.log('Login - Current user:', currentUser); // Debug log
+        updateDebugInfo(currentUser);
         
         // Try different ways to get username
         const username = currentUser.ProfileEntryResponse?.Username || 
