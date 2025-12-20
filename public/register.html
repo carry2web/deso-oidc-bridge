@@ -40,14 +40,15 @@
       color: #333;
       font-weight: 500;
     }
-    input, select {
+    input, select, textarea {
       width: 100%;
       padding: 12px;
       border: 2px solid #e0e0e0;
       border-radius: 8px;
       font-size: 16px;
+      font-family: inherit;
     }
-    input:focus, select:focus {
+    input:focus, select:focus, textarea:focus {
       outline: none;
       border-color: #667eea;
     }
@@ -115,7 +116,7 @@
       
       <div class="form-group">
         <label>Why do you want to join SafetyNet.Social? *</label>
-        <textarea id="justification" required placeholder="Please explain why you want to become a member of SafetyNet.Social and how you plan to contribute to the community...\" style="min-height: 120px; resize: vertical; font-family: inherit;"></textarea>
+        <textarea id="justification" required placeholder="Please explain why you want to become a member of SafetyNet.Social and how you plan to contribute to the community..." style="min-height: 120px; resize: vertical;"></textarea>
       </div>
       
       <button type="submit" class="btn">Submit Membership Request</button>
