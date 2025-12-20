@@ -138,51 +138,61 @@
       statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
     }
     
-    function updateDebugInfo(user) {
-      // Show detailed structure
+    function updateDebugInfo(data) {
       const details = {
-        'Has publicKey': !!user.publicKey,
-        'Has ProfileEntryResponse': !!user.ProfileEntryResponse,
-        'ProfileEntryResponse.Username': user.ProfileEntryResponse?.Username || 'NOT FOUND',
-        'Has profile': !!user.profile,
-        'profile.Username': user.profile?.Username || 'NOT FOUND',
-        'username field': user.username || 'NOT FOUND',
-        'All top-level keys': Object.keys(user).join(', ')
+        'Identity publicKey': data.identity?.publicKey?.slice(0, 20) + '...' || 'NOT FOUND',
+        'Profile Username': data.profile?.Profile?.Username || 'NOT FOUND',
+        'Profile Description': data.profile?.Profile?.Description?.slice(0, 30) + '...' || 'NOT FOUND'
       };
       
-      let html = '<strong>DeSo Identity Debug:</strong><br>';
+      let html = '<strong>DeSo Data:</strong><br>';
       for (const [key, value] of Object.entries(details)) {
         html += `${key}: <code>${value}</code><br>`;
       }
-      html += '<br><strong>Full Object:</strong><br>';
-      html += `<pre style="max-height: 150px; overflow: auto; font-size: 10px;">${JSON.stringify(user, null, 2)}</pre>`;
+      html += '<br><strong>Full Profile Object:</strong><br>';
+      html += `<pre style="max-height: 150px; overflow: auto; font-size: 9px; text-align: left;">${JSON.stringify(data.profile, null, 2)}</pre>`;
       
-      debugInfo.innerHTML = html;
+      document.getElementById('debugInfo').innerHTML = html;
     }
 
-    identity.subscribe(({ currentUser: user, event }) => {
+    identity.subscribe(async ({ currentUser: user, event }) => {
       if (user?.publicKey) {
         currentUser = user;
-        console.log('Current user:', user); // Debug log
+        console.log('DeSo Identity returned:', user);
         
-        // Always show debug info (we need to see the structure)
-        const debugDiv = document.getElementById('debugInfo');
-        debugDiv.style.display = 'block';
-        updateDebugInfo(user);
-        
-        // Try different ways to get username
-        const username = user.ProfileEntryResponse?.Username || 
-                        user.profile?.Username ||
-                        user.username ||
-                        null;
-        
-        document.getElementById('publicKey').value = user.publicKey;
-        document.getElementById('username').value = username || 'N/A';
-        userInfo.textContent = `Logged in as: ${username || user.publicKey.slice(0, 10) + '...'}`;
-        
-        // Pre-fill email if username exists
-        if (username) {
-          document.getElementById('email').value = `${username}@safetynet.social`;
+        // Fetch actual profile data from DeSo API
+        try {
+          const profileResponse = await fetch('https://node.deso.org/api/v0/get-single-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              PublicKeyBase58Check: user.publicKey
+            })
+          });
+          
+          const profileData = await profileResponse.json();
+          console.log('DeSo Profile API returned:', profileData);
+          
+          const username = profileData?.Profile?.Username || null;
+          
+          // Always show debug info
+          const debugDiv = document.getElementById('debugInfo');
+          debugDiv.style.display = 'block';
+          updateDebugInfo({ identity: user, profile: profileData });
+          
+          document.getElementById('publicKey').value = user.publicKey;
+          document.getElementById('username').value = username || 'N/A';
+          userInfo.textContent = `Logged in as: ${username || user.publicKey.slice(0, 10) + '...'}`;
+          
+          // Pre-fill email if username exists
+          if (username) {
+            document.getElementById('email').value = `${username}@safetynet.social`;
+          }
+        } catch (error) {
+          console.error('Failed to fetch profile:', error);
+          const debugDiv = document.getElementById('debugInfo');
+          debugDiv.style.display = 'block';
+          debugDiv.innerHTML = `<strong style="color: #ff6b6b;">Error fetching profile:</strong> ${error.message}`;
         }
       } else if (event === 'LOGOUT') {
         window.location.href = '/login.html';
