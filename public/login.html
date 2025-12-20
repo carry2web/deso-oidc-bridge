@@ -78,13 +78,21 @@
         loginBtn.disabled = true;
         showStatus('Processing login...', 'info');
         
+        console.log('Login - Current user:', currentUser); // Debug log
+        
+        // Try different ways to get username
+        const username = currentUser.ProfileEntryResponse?.Username || 
+                        currentUser.profile?.Username ||
+                        currentUser.username ||
+                        null;
+        
         try {
           const response = await fetch('/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               publicKey: currentUser.publicKey,
-              username: currentUser.ProfileEntryResponse?.Username || null,
+              username: username,
             }),
           });
           

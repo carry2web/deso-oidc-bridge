@@ -135,13 +135,21 @@
     identity.subscribe(({ currentUser: user, event }) => {
       if (user?.publicKey) {
         currentUser = user;
+        console.log('Current user:', user); // Debug log
+        
+        // Try different ways to get username
+        const username = user.ProfileEntryResponse?.Username || 
+                        user.profile?.Username ||
+                        user.username ||
+                        null;
+        
         document.getElementById('publicKey').value = user.publicKey;
-        document.getElementById('username').value = user.ProfileEntryResponse?.Username || 'N/A';
-        userInfo.textContent = `Logged in as: ${user.ProfileEntryResponse?.Username || user.publicKey.slice(0, 10) + '...'}`;
+        document.getElementById('username').value = username || 'N/A';
+        userInfo.textContent = `Logged in as: ${username || user.publicKey.slice(0, 10) + '...'}`;
         
         // Pre-fill email if username exists
-        if (user.ProfileEntryResponse?.Username) {
-          document.getElementById('email').value = `${user.ProfileEntryResponse.Username}@safetynet.social`;
+        if (username) {
+          document.getElementById('email').value = `${username}@safetynet.social`;
         }
       } else if (event === 'LOGOUT') {
         window.location.href = '/login.html';
