@@ -28,18 +28,19 @@ router.post('/login', async (req, res) => {
 
   // Check if user exists in Entra ID
   let userExists = false;
+  let debugLog = [];
   if (username) {
     try {
-      console.log(`Checking Entra ID for: ${username}@safetynet.social`);
+      debugLog.push(`Checking Entra ID for: ${username}@safetynet.social`);
       userExists = await checkUserExists(`${username}@safetynet.social`);
-      console.log(`✓ User ${username}@safetynet.social exists in Entra ID:`, userExists);
+      debugLog.push(`✓ User ${username}@safetynet.social exists in Entra ID: ${userExists}`);
     } catch (error) {
-      console.error('ERROR checking Entra ID:', error.message);
-      console.error('Stack:', error.stack);
-      return res.status(500).json({ error: 'Failed to verify user' });
+      debugLog.push('ERROR checking Entra ID: ' + error.message);
+      debugLog.push('Stack: ' + error.stack);
+      return res.status(500).json({ error: 'Failed to verify user', debug: debugLog });
     }
   } else {
-    console.log('⚠ No username provided - cannot check Entra ID');
+    debugLog.push('⚠ No username provided - cannot check Entra ID');
   }
 
   // If there's a pending auth request, redirect to complete it (only if user exists)
@@ -53,7 +54,8 @@ router.post('/login', async (req, res) => {
       // Redirect back to /authorize to complete the flow
       return res.json({
         success: true,
-        redirect: `/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=code${state ? `&state=${state}` : ''}`
+        redirect: `/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=code${state ? `&state=${state}` : ''}`,
+        debug: debugLog
       });
     } else {
       // User doesn't exist - need registration with justification
@@ -61,7 +63,8 @@ router.post('/login', async (req, res) => {
       return res.json({ 
         success: true, 
         redirect: '/register.html',
-        message: 'Welcome! To access SafetyNet.Social, please complete the membership registration.' 
+        message: 'Welcome! To access SafetyNet.Social, please complete the membership registration.',
+        debug: debugLog
       });
     }
   }
@@ -73,14 +76,16 @@ router.post('/login', async (req, res) => {
     res.json({ 
       success: true, 
       redirect: '/dashboard.html',
-      message: 'Login successful! You have access to SafetyNet.Social.' 
+      message: 'Login successful! You have access to SafetyNet.Social.',
+      debug: debugLog
     });
   } else {
     console.log('✗ Redirecting to registration');
     res.json({ 
       success: true, 
       redirect: '/register.html',
-      message: 'Welcome! Please complete membership registration to access SafetyNet.Social.' 
+      message: 'Welcome! Please complete membership registration to access SafetyNet.Social.',
+      debug: debugLog
     });
   }
   console.log('=== END LOGIN REQUEST ===\n');
