@@ -108,12 +108,6 @@
         <input type="email" id="email" required readonly>
       </div>
       
-      <!-- Debug Info -->
-      <div style="background: #f0f0f0; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 12px; font-family: monospace;">
-        <strong>Debug Info:</strong>
-        <div id="debugInfo" style="margin-top: 0.5rem; color: #333;">Waiting for DeSo Identity...</div>
-      </div>
-      
       <div class="form-group">
         <label>Why do you want to join SafetyNet.Social? *</label>
         <textarea id="justification" required placeholder="Please explain why you want to become a member of SafetyNet.Social and how you plan to contribute to the community..." style="min-height: 120px; resize: vertical;"></textarea>
@@ -145,18 +139,25 @@
     }
     
     function updateDebugInfo(user) {
-      const debugLines = [
-        `✓ Event received from DeSo Identity`,
-        `Public Key: ${user.publicKey ? '✓ Present' : '✗ Missing'}`,
-        `ProfileEntryResponse: ${user.ProfileEntryResponse ? '✓ Present' : '✗ Missing'}`,
-        `ProfileEntryResponse.Username: ${user.ProfileEntryResponse?.Username || '✗ Not found'}`,
-        `profile object: ${user.profile ? '✓ Present' : '✗ Missing'}`,
-        `profile.Username: ${user.profile?.Username || '✗ Not found'}`,
-        `username field: ${user.username || '✗ Not found'}`,
-        ``,
-        `Full user object keys: ${Object.keys(user).join(', ')}`
-      ];
-      debugInfo.innerHTML = debugLines.join('<br>');
+      // Show detailed structure
+      const details = {
+        'Has publicKey': !!user.publicKey,
+        'Has ProfileEntryResponse': !!user.ProfileEntryResponse,
+        'ProfileEntryResponse.Username': user.ProfileEntryResponse?.Username || 'NOT FOUND',
+        'Has profile': !!user.profile,
+        'profile.Username': user.profile?.Username || 'NOT FOUND',
+        'username field': user.username || 'NOT FOUND',
+        'All top-level keys': Object.keys(user).join(', ')
+      };
+      
+      let html = '<strong>DeSo Identity Debug:</strong><br>';
+      for (const [key, value] of Object.entries(details)) {
+        html += `${key}: <code>${value}</code><br>`;
+      }
+      html += '<br><strong>Full Object:</strong><br>';
+      html += `<pre style="max-height: 150px; overflow: auto; font-size: 10px;">${JSON.stringify(user, null, 2)}</pre>`;
+      
+      debugInfo.innerHTML = html;
     }
 
     identity.subscribe(({ currentUser: user, event }) => {
@@ -164,7 +165,9 @@
         currentUser = user;
         console.log('Current user:', user); // Debug log
         
-        // Update debug display
+        // Always show debug info (we need to see the structure)
+        const debugDiv = document.getElementById('debugInfo');
+        debugDiv.style.display = 'block';
         updateDebugInfo(user);
         
         // Try different ways to get username
@@ -252,7 +255,7 @@
   
   <div id="footer" style="position: fixed; bottom: 0; left: 0; right: 0; text-align: center; padding: 0.75rem; background: rgba(0,0,0,0.85); color: #ffffff; font-size: 11px; border-top: 1px solid rgba(255,255,255,0.1);">
     <div>Version: BUILD_TIMESTAMP</div>
-    <div id="debugInfo" style="margin-top: 0.25rem; display: none; color: #ffd700;"></div>
+    <div id="debugInfo" style="margin-top: 0.5rem; display: none; color: #ffd700; max-height: 200px; overflow: auto;"></div>
   </div>
 </body>
 </html>
