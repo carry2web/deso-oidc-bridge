@@ -33,11 +33,7 @@ jobs:
           app-name: deso-oidc-bridge
           slot-name: production
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-          package: release.zipname: Deploy to Azure Web App
-
-on:
-  push:
-    branches:
+          package: release.zip
       - main
   workflow_dispatch:
 
