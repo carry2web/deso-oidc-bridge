@@ -22,7 +22,7 @@ RUN BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC") && \
 RUN npm prune --production
 
 # Expose port
-EXPOSE 3000
+EXPOSE 8080
 
 # Start server
 CMD ["node", "server.js"]
