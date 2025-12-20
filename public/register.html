@@ -120,10 +120,6 @@
     <div id="status"></div>
   </div>
 
-  <div style="text-align: center; padding: 1rem; color: rgba(255,255,255,0.7); font-size: 12px;">
-    Version: BUILD_TIMESTAMP
-  </div>
-
 <script type="module">
     import { identity } from '/deso-protocol.js';
     
@@ -250,22 +246,11 @@
         window.location.href = '/login.html';
       }
     }, 1000);
-    
-    // Debug info fetch
-    fetch('/api/debug-status')
-      .then(r => r.json())
-      .then(data => {
-        if (data.debug) {
-          const debugDiv = document.getElementById('debugInfo');
-          debugDiv.style.display = 'block';
-          debugDiv.innerHTML = `<strong>DEBUG</strong> | register.html | ${new Date().toISOString().slice(11,19)}`;
-        }
-      });
   </script>
   
   <div id="footer" style="position: fixed; bottom: 0; left: 0; right: 0; text-align: center; padding: 0.75rem; background: rgba(0,0,0,0.85); color: #ffffff; font-size: 11px; border-top: 1px solid rgba(255,255,255,0.1);">
     <div>Version: BUILD_TIMESTAMP</div>
-    <div id="debugInfo" style="margin-top: 0.5rem; display: none; color: #ffd700; max-height: 200px; overflow: auto;"></div>
+    <div id="debugInfo" style="margin-top: 0.5rem; display: none; color: #ffd700; max-height: 200px; overflow: auto; text-align: left; padding: 0 1rem;"></div>
   </div>
 </body>
 </html>
