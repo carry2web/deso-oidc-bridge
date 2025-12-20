@@ -122,6 +122,7 @@
 
 <script type="module">
     import { identity } from '/deso-protocol.js';
+    import { getDesoProfile, getDesoUsername } from './deso-profile.js';
     
     const form = document.getElementById('registerForm');
     const statusDiv = document.getElementById('status');
@@ -156,39 +157,22 @@
         currentUser = user;
         console.log('DeSo Identity returned:', user);
         
-        // Fetch actual profile data from DeSo API
-        try {
-          const profileResponse = await fetch('https://node.deso.org/api/v0/get-single-profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              PublicKeyBase58Check: user.publicKey
-            })
-          });
-          
-          const profileData = await profileResponse.json();
-          console.log('DeSo Profile API returned:', profileData);
-          
-          const username = profileData?.Profile?.Username || null;
-          
-          // Always show debug info
-          const debugDiv = document.getElementById('debugInfo');
-          debugDiv.style.display = 'block';
-          updateDebugInfo({ identity: user, profile: profileData });
-          
-          document.getElementById('publicKey').value = user.publicKey;
-          document.getElementById('username').value = username || 'N/A';
-          userInfo.textContent = `Logged in as: ${username || user.publicKey.slice(0, 10) + '...'}`;
-          
-          // Pre-fill email if username exists
-          if (username) {
-            document.getElementById('email').value = `${username}@safetynet.social`;
-          }
-        } catch (error) {
-          console.error('Failed to fetch profile:', error);
-          const debugDiv = document.getElementById('debugInfo');
-          debugDiv.style.display = 'block';
-          debugDiv.innerHTML = `<strong style="color: #ff6b6b;">Error fetching profile:</strong> ${error.message}`;
+        // Use shared function
+        const profile = await getDesoProfile(user.publicKey);
+        const username = profile?.Username || null;
+        
+        // Always show debug info
+        const debugDiv = document.getElementById('debugInfo');
+        debugDiv.style.display = 'block';
+        updateDebugInfo({ identity: user, profile: { Profile: profile } });
+        
+        document.getElementById('publicKey').value = user.publicKey;
+        document.getElementById('username').value = username || 'N/A';
+        userInfo.textContent = `Logged in as: ${username || user.publicKey.slice(0, 10) + '...'}`;
+        
+        // Pre-fill email if username exists
+        if (username) {
+          document.getElementById('email').value = `${username}@safetynet.social`;
         }
       } else if (event === 'LOGOUT') {
         window.location.href = '/login.html';

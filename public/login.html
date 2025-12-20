@@ -73,6 +73,7 @@
 
   <script type="module">
     import { identity, configure } from '/deso-protocol.js';
+    import { getDesoUsername } from './deso-profile.js';
     
     configure({
       appName: 'DeSo OIDC Bridge',
@@ -109,17 +110,9 @@
         loginBtn.disabled = true;
         showStatus('Processing login...', 'info');
         
-        // Fetch username from DeSo API
-        let username = null;
-        try {
-          const profileResponse = await fetch('https://node.deso.org/api/v0/get-single-profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ PublicKeyBase58Check: currentUser.publicKey })
-          });
-          const profileData = await profileResponse.json();
-          username = profileData?.Profile?.Username || null;
-        } catch (err) {
+        // Use shared function
+        const username = await getDesoUsername(currentUser.publicKey);
+        if (!username) {
           showStatus('Failed to fetch DeSo profile', 'error');
           loginBtn.disabled = false;
           return;
