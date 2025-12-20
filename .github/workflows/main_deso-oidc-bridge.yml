@@ -27,3 +27,16 @@ jobs:
         run: |
           docker build -t ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest .
           docker push ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest
+
+      - name: Tag image with commit SHA and push
+        run: |
+          docker tag ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:${{ github.sha }}
+          docker push ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:${{ github.sha }}
+
+      - name: Azure CLI - Update Web App to use new image
+        uses: azure/cli@v1
+        with:
+          azcliversion: 2.30.0
+          inlineScript: |
+            az webapp config container set --name ${{ secrets.AZURE_WEBAPP_NAME }} --resource-group bridge --docker-custom-image-name ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:${{ github.sha }}
+            az webapp restart --name ${{ secrets.AZURE_WEBAPP_NAME }} --resource-group bridge
