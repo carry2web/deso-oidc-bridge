@@ -6,16 +6,13 @@ on:
       - main
   workflow_dispatch:
 
-env:
-
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-          uses: actions/checkout@v4
+        uses: actions/checkout@v4
 
       - name: Log in to registry
         run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ secrets.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
@@ -24,8 +21,6 @@ jobs:
         run: |
           docker build -t ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest .
           docker push ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest
-
-      # Removed empty step for tagging image
 
       - name: Azure CLI - Update Web App to use new image
         uses: azure/cli@v1
