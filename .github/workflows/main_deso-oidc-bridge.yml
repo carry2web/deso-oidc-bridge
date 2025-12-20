@@ -36,18 +36,9 @@ jobs:
             -t ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:latest \
             --push .
 
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Restart Azure Web App
-        run: |
-          az webapp restart --name ${{ secrets.AZURE_WEBAPP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
-
       - name: Deployment Summary
         run: |
           echo "✅ Deployment completed successfully!"
           echo "🚀 Image: ${{ secrets.REGISTRY_URL }}/deso-oidc-bridge:${{ github.sha }}"
           echo "📦 Also tagged as: latest"
-          echo "🌐 Web App: ${{ secrets.AZURE_WEBAPP_NAME }}"
+          echo "🌐 Azure Web App will automatically pull the new image via webhook"
