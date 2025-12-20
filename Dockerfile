@@ -14,6 +14,10 @@ COPY . .
 # Build the DeSo SDK bundle
 RUN npm run build
 
+# Inject build timestamp into HTML files
+RUN BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC") && \
+    find /app/public -name "*.html" -type f -exec sed -i "s/BUILD_TIMESTAMP/$BUILD_TIME/g" {} \;
+
 # Remove devDependencies
 RUN npm prune --production
 
