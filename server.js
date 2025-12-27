@@ -1,3 +1,10 @@
+// Top-level error handlers for diagnostics
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 import 'dotenv/config';
 import express from 'express';
