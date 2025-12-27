@@ -17,6 +17,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+console.log('process.env.PORT:', process.env.PORT);
 const PORT = process.env.PORT || 3000;
 
 // Serve package.json for version info (read-only, safe for public)
