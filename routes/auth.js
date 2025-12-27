@@ -6,6 +6,7 @@ const router = express.Router();
 /**
  * Login callback - receives DeSo login data
  */
+
 router.post('/login', async (req, res) => {
   const { publicKey, username } = req.body;
 
@@ -22,18 +23,36 @@ router.post('/login', async (req, res) => {
   // Store user session
   req.session.publicKey = publicKey;
   req.session.username = username || null;
-  req.session.email = username ? `${username}@safetynet.social` : null;
-  
-  console.log('Session data set:', { publicKey, username, email: req.session.email });
+  let email = null;
+  let isWorkTenant = false;
+  if (username) {
+    if (username.toLowerCase().endsWith('.safetynet')) {
+      // Defensive: never allow .safetynet as username, only @safetynet.social
+      email = null;
+    } else {
+      email = `${username}@safetynet.social`;
+      isWorkTenant = true;
+    }
+  }
+  req.session.email = email;
+  req.session.isWorkTenant = isWorkTenant;
+  console.log('Session data set:', { publicKey, username, email, isWorkTenant });
 
-  // Check if user exists in Entra ID
+  // Determine which tenant to check
   let userExists = false;
   let debugLog = [];
+  let checkEmail = null;
   if (username) {
+    if (isWorkTenant) {
+      checkEmail = `${username}@safetynet.social`;
+      debugLog.push(`Checking work tenant for: ${checkEmail}`);
+    } else {
+      checkEmail = username;
+      debugLog.push(`Checking external tenant for: ${checkEmail}`);
+    }
     try {
-      debugLog.push(`Checking Entra ID for: ${username}@safetynet.social`);
-      userExists = await checkUserExists(`${username}@safetynet.social`);
-      debugLog.push(`✓ User ${username}@safetynet.social exists in Entra ID: ${userExists}`);
+      userExists = await checkUserExists(checkEmail);
+      debugLog.push(`✓ User ${checkEmail} exists: ${userExists}`);
     } catch (error) {
       debugLog.push('ERROR checking Entra ID: ' + error.message);
       debugLog.push('Stack: ' + error.stack);
@@ -43,29 +62,42 @@ router.post('/login', async (req, res) => {
     debugLog.push('⚠ No username provided - cannot check Entra ID');
   }
 
-  // If there's a pending auth request, redirect to complete it (only if user exists)
+
+  // If there's a pending auth request, redirect to complete it
   if (req.session.authRequest) {
     console.log('Pending auth request found:', req.session.authRequest);
     const { client_id, redirect_uri, state } = req.session.authRequest;
-    
+
     if (userExists) {
       console.log('✓ User exists - proceeding with OIDC flow');
       delete req.session.authRequest;
-      // Redirect back to /authorize to complete the flow
       return res.json({
         success: true,
         redirect: `/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=code${state ? `&state=${state}` : ''}`,
         debug: debugLog
       });
     } else {
-      // User doesn't exist - need registration with justification
-      console.log('✗ User does not exist - redirecting to registration');
-      return res.json({ 
-        success: true, 
-        redirect: '/register.html',
-        message: 'Welcome! To access SafetyNet.Social, please complete the membership registration.',
-        debug: debugLog
-      });
+      // Registration logic
+      if (isWorkTenant) {
+        // Work tenant: require approval
+        console.log('✗ User does not exist in work tenant - redirecting to registration (approval required)');
+        return res.json({
+          success: true,
+          redirect: '/register.html',
+          message: 'Welcome! To access SafetyNet.Social, please complete the membership registration. Approval is required.',
+          debug: debugLog
+        });
+      } else {
+        // External tenant: allow registration without approval
+        console.log('✗ User does not exist in external tenant - auto-approve registration');
+        // Optionally, you could auto-provision here or just allow access
+        return res.json({
+          success: true,
+          redirect: '/dashboard.html',
+          message: 'Registration successful! You have access to SafetyNet.Social.',
+          debug: debugLog
+        });
+      }
     }
   }
 
@@ -73,20 +105,30 @@ router.post('/login', async (req, res) => {
   console.log('No pending auth request - direct login flow');
   if (userExists) {
     console.log('✓ Redirecting to dashboard');
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       redirect: '/dashboard.html',
       message: 'Login successful! You have access to SafetyNet.Social.',
       debug: debugLog
     });
   } else {
-    console.log('✗ Redirecting to registration');
-    res.json({ 
-      success: true, 
-      redirect: '/register.html',
-      message: 'Welcome! Please complete membership registration to access SafetyNet.Social.',
-      debug: debugLog
-    });
+    if (isWorkTenant) {
+      console.log('✗ Redirecting to registration (approval required)');
+      res.json({
+        success: true,
+        redirect: '/register.html',
+        message: 'Welcome! Please complete membership registration to access SafetyNet.Social. Approval is required.',
+        debug: debugLog
+      });
+    } else {
+      console.log('✗ External tenant - auto-approve registration');
+      res.json({
+        success: true,
+        redirect: '/dashboard.html',
+        message: 'Registration successful! You have access to SafetyNet.Social.',
+        debug: debugLog
+      });
+    }
   }
   console.log('=== END LOGIN REQUEST ===\n');
 });

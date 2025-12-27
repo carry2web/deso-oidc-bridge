@@ -56,6 +56,22 @@
     <p id="subtitle">Loading...</p>
     
     <div id="approvals"></div>
+
+    <div style="margin-top:2rem;">
+      <h2>Invitation Email Template</h2>
+      <textarea id="inviteTemplate" style="width:100%;min-height:120px;resize:vertical;">
+Hello,
+
+You have been invited to join SafetyNet.Social and access Microsoft Teams as a guest using your DeSo identity.
+
+Click the invitation link in your email to complete registration and sign in.
+
+If you have questions, contact support@safetynet.social.
+
+Welcome!
+      </textarea>
+      <div style="font-size:12px;color:#666;margin-top:0.5rem;">This template will be used for the Microsoft Graph invitation email.</div>
+    </div>
   </div>
 
 <script type="module">
@@ -84,37 +100,53 @@
       await loadApprovals();
     }
 
+
     async function loadApprovals() {
       const response = await fetch(`/admin/approvals?publicKey=${adminPublicKey}`);
       const data = await response.json();
-      
       const approvalsDiv = document.getElementById('approvals');
       const subtitle = document.getElementById('subtitle');
-      
       if (!data.success || data.approvals.length === 0) {
-        subtitle.textContent = 'No pending registrations';
-        approvalsDiv.innerHTML = '<div class="empty">All caught up! 🎉</div>';
+        subtitle.textContent = 'No registrations found';
+        approvalsDiv.innerHTML = '<div class="empty">No registrations yet.</div>';
         return;
       }
-      
-      subtitle.textContent = `Pending registrations: ${data.approvals.length}`;
-      
-      approvalsDiv.innerHTML = data.approvals.map(approval => `
+      // Sort: pending first, then approved, then rejected
+      const sorted = data.approvals.slice().sort((a, b) => {
+        const order = { pending: 0, approved: 1, rejected: 2 };
+        return (order[a.status] ?? 99) - (order[b.status] ?? 99);
+      });
+      subtitle.textContent = `Total registrations: ${data.approvals.length}`;
+      approvalsDiv.innerHTML = sorted.map(approval => {
+        let inviteStatus = '';
+        if (approval.inviteStatus) {
+          inviteStatus = `<span style='color:#007bff;font-weight:600;'>Invite: ${approval.inviteStatus}</span>`;
+        } else if (approval.status === 'approved' && approval.registrationType === 'guest') {
+          inviteStatus = `<span style='color:#007bff;font-weight:600;'>Invite: auto-approved</span>`;
+        } else {
+          inviteStatus = `<span style='color:#888;'>Invite: not sent</span>`;
+        }
+        let statusColor = approval.status === 'pending' ? '#ffc107' : approval.status === 'approved' ? '#28a745' : '#dc3545';
+        let statusLabel = approval.status.charAt(0).toUpperCase() + approval.status.slice(1);
+        return `
         <div class="approval">
           <strong>${approval.username || 'Unknown'}</strong>
           <span>Email: ${approval.email}</span>
           <span>Public Key: ${approval.publicKey.substring(0, 30)}...</span>
           <span>Submitted: ${new Date(approval.createdAt).toLocaleString()}</span>
+          <span style="color:${statusColor};font-weight:600;">Status: ${statusLabel}</span>
+          ${inviteStatus}
           <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 6px;">
             <strong style="font-size: 14px; color: #333;">Justification:</strong>
             <p style="margin-top: 0.5rem; color: #555; font-size: 14px; line-height: 1.5;">${approval.justification || 'No justification provided'}</p>
           </div>
           <div class="actions">
-            <button class="btn btn-approve" onclick="handleApprove('${approval.id}')">Approve</button>
-            <button class="btn btn-reject" onclick="handleReject('${approval.id}')">Reject</button>
+            ${approval.status === 'pending' ? `<button class="btn btn-approve" onclick="handleApprove('${approval.id}')">Approve</button>
+            <button class="btn btn-reject" onclick="handleReject('${approval.id}')">Reject</button>` : ''}
           </div>
         </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     async function handleApprove(approvalId) {
