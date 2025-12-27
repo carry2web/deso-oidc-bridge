@@ -10,6 +10,7 @@ import fs from 'fs';
 import authRoutes from './routes/auth.js';
 import oidcRoutes from './routes/oidc.js';
 import adminRoutes from './routes/admin.js';
+console.log('=== [Startup] server.js loaded ===');
 import { handleNewUserWebhook } from './lib/handleNewUserWebhook.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -76,8 +77,8 @@ app.get('/health', (req, res) => {
 });
 
 
-// Start webhook subscription/renewal logic
-import './lib/graphWebhookSubscription.js';
+// Start webhook subscription/renewal logic (temporarily disabled for debug)
+// import './lib/graphWebhookSubscription.js';
 
 app.listen(PORT, () => {
   console.log(`🚀 DeSo OIDC Bridge running on http://localhost:${PORT}`);
