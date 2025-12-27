@@ -11,7 +11,7 @@ import authRoutes from './routes/auth.js';
 import oidcRoutes from './routes/oidc.js';
 import adminRoutes from './routes/admin.js';
 console.log('=== [Startup] server.js loaded ===');
-import { handleNewUserWebhook } from './lib/handleNewUserWebhook.js';
+// import { handleNewUserWebhook } from './lib/handleNewUserWebhook.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -57,8 +57,8 @@ app.use('/auth', authRoutes);
 app.use('/', oidcRoutes);
 app.use('/admin', adminRoutes);
 
-// Webhook endpoint for new user creation notifications
-app.post('/webhook/handleNewUser', express.json(), handleNewUserWebhook);
+// Webhook endpoint for new user creation notifications (disabled for now)
+// app.post('/webhook/handleNewUser', express.json(), handleNewUserWebhook);
 
 // Root redirect
 app.get('/', (req, res) => {
